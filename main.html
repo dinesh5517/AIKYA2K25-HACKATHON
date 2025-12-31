@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Smart Crop Advisory — Live Simulation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<style>
+  :root{
+    --bg1: #f7fff7;
+    --accent: #ff7a00;
+    --green: #2e8b57;
+    --card: #ffffff;
+    --muted:#6b6b6b;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background: linear-gradient(180deg,#f2fff2 0%, #eaffea 100%);
+    color:#123;
+    -webkit-font-smoothing:antialiased;
+  }
+  
+  /* Navigation Bar Styles */
+  .navbar {
+    background: var(--card);
+    padding: 0 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+  }
+  
+  .nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 60px;
+  }
+  
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: var(--green);
+    font-weight: 700;
+    font-size: 18px;
+  }
+  
+  .nav-logo-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(90deg,#a8e6a2,#6bd37b);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 16px;
+  }
+  
+  .nav-menu {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .nav-item {
+    position: relative;
+  }
+  
+  .nav-link {
+    text-decoration: none;
+    color: var(--muted);
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+  }
+  
+  .nav-link:hover {
+    color: var(--green);
+    background: rgba(46, 139, 87, 0.1);
+  }
+  
+  .nav-link.active {
+    color: var(--green);
+    background: rgba(46, 139, 87, 0.1);
+  }
+  
+  .demo-btn {
+    background: var(--accent);
+    color: white !important;
+    padding: 8px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+  
+  .demo-btn:hover {
+    background: #e56a00;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 122, 0, 0.3);
+  }
+  
+  .mobile-menu-btn {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--muted);
+  }
+  
+  header{padding:18px 20px; display:flex; gap:12px; align-items:center; justify-content:space-between;}
+  h1{margin:0;font-size:20px;color:var(--green);display:flex;gap:8px;align-items:center}
+  .top-right{display:flex; gap:8px; align-items:center;}
+  .container{padding:0 20px 40px; max-width:1200px; margin:0 auto;}
+  .grid{
+    display:grid;
+    grid-template-columns: repeat(5,1fr);
+    gap:16px;
+    margin-top:10px;
+  }
+  .card{
+    background:var(--card);
+    border-radius:12px;
+    padding:14px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.07);
+    min-height:88px;
+  }
+  .card h3{margin:0;font-size:13px;color:var(--muted);font-weight:600}
+  .value{font-size:20px;font-weight:700;margin-top:6px;color:var(--accent)}
+  .main{
+    display:grid;
+    grid-template-columns: 1fr 460px;
+    gap:20px;
+    margin-top:20px;
+  }
+  .panel{
+    background:var(--card);
+    border-radius:14px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.06);
+    padding:18px;
+  }
+  #animationWrap{height:320px; display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative;}
+  .advice{margin-top:12px;background:linear-gradient(90deg,#fff9f0,#fff3e6); padding:12px; border-radius:10px; font-weight:600;}
+  .controls{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+  button, select, label{font-size:14px}
+  button{
+    padding:8px 12px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);cursor:pointer;background:#fff;
+    box-shadow:0 2px 6px rgba(0,0,0,0.04);
+  }
+  .badge{display:inline-block;padding:6px 10px;border-radius:999px;font-weight:700}
+  .good{background:#e6fff0;color:#0b7b3d}
+  .warn{background:#fff7e6;color:#b36b00}
+  .crit{background:#fff0f0;color:#c02a2a}
+  .plant-wrap{width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px}
+  svg{max-width:360px;width:60%;}
+  .history{max-height:250px;overflow:auto;padding:8px;border-radius:8px;background:#fcfff8;border:1px solid rgba(0,0,0,0.03)}
+  .log{font-size:13px;padding:6px;border-bottom:1px dashed rgba(0,0,0,0.03)}
+  .crop-info{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+  .crop-card{display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:8px;background:#fff;box-shadow:0 3px 8px rgba(0,0,0,0.03)}
+  .controls-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+  
+  /* Responsive Design */
+  @media (max-width:980px){
+    .grid{grid-template-columns:repeat(2,1fr)}
+    .main{grid-template-columns:1fr}
+    svg{width:75%}
+    
+    .mobile-menu-btn {
+      display: block;
+    }
+    
+    .nav-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 100%;
+      background: var(--card);
+      flex-direction: column;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      display: none;
+    }
+    
+    .nav-menu.active {
+      display: flex;
+    }
+    
+    .nav-item {
+      width: 100%;
+      text-align: center;
+    }
+    
+    .nav-link {
+      display: block;
+      padding: 12px;
+      width: 100%;
+    }
+  }
+</style>
+</head>
+<body>
+<!-- Navigation Bar -->
+<nav class="navbar">
+  <div class="nav-container">
+    <a href="#" class="nav-logo">
+      <div class="nav-logo-icon">🌾</div>
+      Smart Crop Advisory
+    </a>
+    
+    <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
+    
+    <ul class="nav-menu" id="navMenu">
+      <li class="nav-item">
+        <a href="#" class="nav-link active">Home</a>
+      </li>
+      <li class="nav-item">
+        <a href="#" class="nav-link">About</a>
+      </li>
+      <li class="nav-item">
+        <a href="#" class="nav-link">Features</a>
+      </li>
+      <li class="nav-item">
+        <a href="#" class="nav-link">Documentation</a>
+      </li>
+      <li class="nav-item">
+        <a href="livedemo.html" class="nav-link demo-btn">Live Demo</a>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<header>
+  <div style="display:flex;gap:12px;align-items:center">
+    <div style="width:38px;height:38px;border-radius:8px;background:linear-gradient(90deg,#a8e6a2,#6bd37b)"></div>
+    <h1>🌾 Smart Crop Advisory — Live Simulation</h1>
+  </div>
+  <div class="top-right">
+    <div style="text-align:right;font-size:13px;color:var(--muted)">Demo Mode • Simulation</div>
+  </div>
+</header>
+
+<div class="container">
+  <div class="grid" aria-hidden="false">
+    <div class="card" role="region" aria-label="Temperature card">
+      <h3>🌡️ Temperature</h3>
+      <div id="temp" class="value">-- °C</div>
+    </div>
+    <div class="card" role="region" aria-label="Humidity card">
+      <h3>💧 Humidity</h3>
+      <div id="humidity" class="value">-- %</div>
+    </div>
+    <div class="card" role="region" aria-label="Soil moisture card">
+      <h3>🌱 Soil Moisture</h3>
+      <div id="moisture" class="value">-- %</div>
+    </div>
+    <div class="card" role="region" aria-label="Rain status">
+      <h3>🌦️ Rain</h3>
+      <div id="rain" class="value">--</div>
+    </div>
+    <div class="card" role="region" aria-label="Tank level">
+      <h3>🚰 Tank Level</h3>
+      <div id="tank" class="value">-- %</div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <strong>Live Animated Farm</strong>
+        <div style="display:flex;align-items:center;gap:10px">
+          <label for="cropSelect">Select Crop</label>
+          <select id="cropSelect" aria-label="Select crop">
+            <option value="paddy">Paddy</option>
+            <option value="wheat">Wheat</option>
+            <option value="groundnut">Groundnut</option>
+            <option value="maize">Maize</option>
+            <option value="cotton">Cotton</option>
+            <option value="millets">Millets</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="controls-row">
+        <div class="controls" role="group" aria-label="Simulation controls">
+          <button id="btnPlay">▶ Play</button>
+          <button id="btnPause" disabled>⏸ Pause</button>
+          <label for="speed">Speed</label>
+          <select id="speed" aria-label="Simulation speed">
+            <option value="1">1x</option>
+            <option value="0.5">0.5x</option>
+            <option value="2">2x</option>
+            <option value="4">4x</option>
+          </select>
+          <button id="forceRain">🌧 Force Rain</button>
+          <button id="forceIrr">💧 Force Irrigation</button>
+        </div>
+        <div style="margin-left:8px">
+          <button id="predictCrop">🔍 Predict Best Crop</button>
+        </div>
+      </div>
+
+      <div id="animationWrap" aria-live="polite" role="img" aria-label="Crop animation area">
+        <div id="cropAnimation" class="plant-wrap" style="position:relative;">
+          <svg id="plantSVG" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect x="0" y="150" width="200" height="50" fill="#654321"/>
+            <g id="plantGroup" transform="translate(100,150)">
+              <path id="stem" d="M0 0 C0 -30 0 -60 0 -80" stroke="#2f8a2f" stroke-width="6" fill="none" stroke-linecap="round"/>
+              <ellipse id="leafL" cx="-10" cy="-60" rx="12" ry="6" fill="#3db258" transform="rotate(-20 -10 -60)"/>
+              <ellipse id="leafR" cx="12" cy="-40" rx="14" ry="7" fill="#34a853" transform="rotate(16 12 -40)"/>
+            </g>
+            <g id="sun" transform="translate(150,30)">
+              <circle cx="0" cy="0" r="18" fill="#ffd54a"/>
+            </g>
+          </svg>
+          <div id="animText" style="font-size:14px;color:var(--muted)">Animation state: normal</div>
+        </div>
+      </div>
+
+      <div class="advice" id="advice">Loading advisory...</div>
+      <div style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <span class="badge good" id="statusBadge">Status: Good</span>
+        <div style="font-size:13px;color:var(--muted)">Suggestion: <span id="suggestion">—</span></div>
+      </div>
+
+      <div class="crop-info" id="cropCards">
+        <!-- crop-specific quick cards -->
+      </div>
+    </div>
+
+    <div class="panel" aria-label="Logs and presets">
+      <strong>Scenario Presets & History</strong>
+      <div style="margin-top:8px;display:flex;gap:8px">
+        <button id="presetNormal">Normal</button>
+        <button id="presetDrought">Drought</button>
+        <button id="presetRain">Heavy Rain</button>
+        <button id="presetHeat">Heatwave</button>
+      </div>
+
+      <div style="margin-top:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-size:13px;color:var(--muted)">Recent sensor log</div>
+          <button id="clearLog" style="font-size:12px;padding:6px 8px">Clear</button>
+        </div>
+        <div class="history" id="history"></div>
+      </div>
+
+      <div style="margin-top:12px">
+        <strong>Demo Script (60–90s)</strong>
+        <div style="font-size:13px;color:var(--muted);margin-top:6px" id="demoScript">
+          Problem: Weather fluctuations reduce yield. This demo simulates an IoT advisory system that monitors conditions, auto-controls irrigation, and advises crops.<br><br>
+          Use Force buttons to demonstrate drought, rain, or heat scenarios. Advisory engine maps sensor data to suggestions and animations show plant response in real time.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// Mobile menu toggle
+document.getElementById('mobileMenuBtn').addEventListener('click', function() {
+  document.getElementById('navMenu').classList.toggle('active');
+});
+
+// Close mobile menu when clicking outside
+document.addEventListener('click', function(event) {
+  const navMenu = document.getElementById('navMenu');
+  const mobileBtn = document.getElementById('mobileMenuBtn');
+  
+  if (!navMenu.contains(event.target) && !mobileBtn.contains(event.target)) {
+    navMenu.classList.remove('active');
+  }
+});
+
+/* SIMULATOR MODULE */
+const simulator = (function(){
+  let tickMs = 3000;
+  let timer = null;
+  let cb = ()=>{};
+  let running = false;
+  let state = {
+    temperature: 28,
+    humidity: 60,
+    soilMoisture: 55,
+    rain: false,
+    tankLevel: 80,
+    irrigationActive: false
+  };
+
+  function rand(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+  function smallNoise(x,amp=3){ return x + Math.floor((Math.random()-0.5)*amp*2); }
+
+  function stepOnce(){
+    state.temperature = Math.max(8, Math.min(45, smallNoise(state.temperature,4) + (Math.random()>0.9?rand(-2,2):0)));
+    state.humidity = Math.max(10, Math.min(95, smallNoise(state.humidity,6)));
+
+    if(state.rain){ state.soilMoisture = Math.min(98, state.soilMoisture + rand(4,9)); }
+    else {
+      // soil decreases faster when irrigation is off and temp is high
+      const drain = state.irrigationActive ? rand(0,1) : (state.temperature > 34 ? rand(2,5) : rand(0,3));
+      state.soilMoisture = Math.max(2, state.soilMoisture - drain);
+    }
+
+    if(state.irrigationActive) { state.tankLevel = Math.max(2, state.tankLevel - rand(3,6)); }
+    else { state.tankLevel = Math.min(100, state.tankLevel + rand(0,2)); }
+
+    // small chance of random rain
+    if(!state.rain && Math.random()<0.06) state.rain = true;
+    if(state.rain && Math.random()<0.18) state.rain = false;
+
+    cb(Object.assign({}, state));
+  }
+
+  function tick(){ stepOnce(); }
+
+  return {
+    start: function(callback, speedMultiplier=1){
+      if(typeof callback==='function') cb = callback;
+      if(running) return;
+      running=true;
+      const interval = Math.max(200, tickMs / speedMultiplier);
+      timer = setInterval(()=>{ stepOnce(); cb(Object.assign({}, state)); }, interval);
+      // fire immediate
+      cb(Object.assign({}, state));
+    },
+    stop: function(){ if(timer) clearInterval(timer); timer=null; running=false; },
+    setSpeed: function(mult){
+      if(mult<=0) mult=1;
+      if(running){ this.stop(); this.start(cb, mult); }
+      else { tickMs = 3000; }
+    },
+    getState: function(){ return Object.assign({}, state); },
+    setState: function(newState){ state = Object.assign(state, newState); cb(Object.assign({}, state)); },
+    toggleRain: function(){ state.rain = !state.rain; cb(Object.assign({}, state)); },
+    forceIrrigation: function(on){ state.irrigationActive = !!on; cb(Object.assign({}, state)); },
+    isRunning: ()=> running
+  };
+})();
+
+/* UI & ADVISORY ENGINE */
+const UI = (function(){
+  const tempEl = document.getElementById('temp');
+  const humEl = document.getElementById('humidity');
+  const soilEl = document.getElementById('moisture');
+  const rainEl = document.getElementById('rain');
+  const tankEl = document.getElementById('tank');
+  const adviceEl = document.getElementById('advice');
+  const suggestionEl = document.getElementById('suggestion');
+  const statusBadge = document.getElementById('statusBadge');
+  const historyEl = document.getElementById('history');
+  const animText = document.getElementById('animText');
+  const plantGroup = document.getElementById('plantGroup');
+  const leafL = document.getElementById('leafL');
+  const leafR = document.getElementById('leafR');
+  const stem = document.getElementById('stem');
+  const sun = document.getElementById('sun');
+  const cropSelect = document.getElementById('cropSelect');
+  const cropCardsWrap = document.getElementById('cropCards');
+
+  let logs = [];
+
+  const cropMeta = {
+    paddy: {name:'Paddy', temp:[20,35], humidity:[60,95], soilMin:50, desc:'Needs high moisture and high humidity.'},
+    wheat: {name:'Wheat', temp:[10,30], humidity:[40,70], soilMin:30, desc:'Prefers cooler and drier conditions.'},
+    groundnut: {name:'Groundnut', temp:[25,38], humidity:[40,70], soilMin:25, desc:'Tolerates heat; needs well-drained soil.'},
+    maize: {name:'Maize', temp:[20,35], humidity:[50,80], soilMin:35, desc:'Moderate moisture and warm temps.'},
+    cotton: {name:'Cotton', temp:[21,35], humidity:[40,65], soilMin:30, desc:'Warm climate, moderate moisture.'},
+    millets: {name:'Millets', temp:[25,40], humidity:[20,60], soilMin:15, desc:'Drought-tolerant; low moisture ok.'}
+  };
+
+  function formatTime(d){ return d.toLocaleTimeString(); }
+  function pushLog(obj){
+    logs.unshift(obj);
+    if(logs.length>40) logs.pop();
+    renderHistory();
+  }
+  function renderHistory(){
+    historyEl.innerHTML = logs.map(l=>`<div class="log"><strong>${formatTime(new Date(l.ts))}</strong> • T:${l.temperature}°C H:${l.humidity}% S:${l.soilMoisture}% Rain:${l.rain?'Yes':'No'} Tank:${l.tankLevel}%</div>`).join('');
+  }
+
+  function setValues(data){
+    tempEl.textContent = data.temperature + ' °C';
+    humEl.textContent = data.humidity + ' %';
+    soilEl.textContent = data.soilMoisture + ' %';
+    rainEl.textContent = data.rain ? 'Yes' : 'No';
+    tankEl.textContent = data.tankLevel + ' %';
+    pushLog(Object.assign({ts:Date.now()}, data));
+  }
+
+  function cropSuitabilityLabel(cropKey, data){
+    const meta = cropMeta[cropKey];
+    let score = 0;
+    if(data.temperature >= meta.temp[0] && data.temperature <= meta.temp[1]) score++;
+    if(data.humidity >= meta.humidity[0] && data.humidity <= meta.humidity[1]) score++;
+    if(data.soilMoisture >= meta.soilMin) score++;
+    if(data.tankLevel > 20) score++;
+    if(data.rain) score++;
+    if(score >= 4) return 'Excellent';
+    if(score === 3) return 'Good';
+    if(score === 2) return 'Fair';
+    return 'Poor';
+  }
+
+  function renderCropCards(data){
+    cropCardsWrap.innerHTML = ''; 
+    for(const key of Object.keys(cropMeta)){
+      const meta = cropMeta[key];
+      const label = cropSuitabilityLabel(key, data);
+      const el = document.createElement('div');
+      el.className = 'crop-card';
+      el.innerHTML = `<div style="font-weight:700">${meta.name}</div>
+                      <div style="text-align:right">
+                        <div style="font-size:13px;color:var(--muted)">${label}</div>
+                        <div style="font-size:12px;color:#666">${meta.desc}</div>
+                      </div>`;
+      cropCardsWrap.appendChild(el);
+    }
+  }
+
+  function advisory(data){
+    const selectedCrop = cropSelect.value;
+    const meta = cropMeta[selectedCrop];
+
+    let message = 'Conditions normal.';
+    let badge = 'good';
+    let suggestion = 'Suitable for general cropping.';
+    let animState = 'normal';
+
+    if(data.rain){
+      message = '🌧️ Rain detected — irrigation paused.';
+      badge='good';
+      suggestion = 'Avoid irrigation. Monitor water logging.';
+      animState = 'raining';
+    } else if(data.soilMoisture < 25 && data.tankLevel <= 10){
+      message = '🚨 Soil dry & tank low — manual refill needed.';
+      badge='crit';
+      suggestion = 'Refill tank. Manual intervention required.';
+      animState = 'dry';
+    } else if(data.soilMoisture < meta.soilMin){
+      message = `⚠️ Soil moisture low for ${meta.name} — irrigation recommended.`;
+      badge='warn';
+      suggestion = `Start irrigation. ${meta.desc}`;
+      animState = 'dry';
+    } else if(data.soilMoisture > 75){
+      message = '💧 Soil moisture high — stop irrigation.';
+      badge='good';
+      suggestion = 'Reduce irrigation; check drainage.';
+      animState = 'wet';
+    } else if(data.temperature > meta.temp[1] + 2){
+      message = `🔥 High temperature — ${meta.name} may face heat stress.`;
+      badge='warn';
+      suggestion = 'Use mulching/shade; increase irrigation frequency cautiously.';
+      animState = 'hot';
+    } else {
+      message = `✅ Conditions favorable for ${meta.name}.`;
+      badge='good';
+      suggestion = `Good to cultivate ${meta.name}. ${meta.desc}`;
+      animState = 'normal';
+    }
+
+    // update UI
+    adviceEl.textContent = message;
+    suggestionEl.textContent = suggestion;
+    statusBadge.textContent = 'Status: ' + (badge==='good'?'Good': badge==='warn'?'Warning':'Critical');
+    statusBadge.className = 'badge ' + (badge==='good'?'good': badge==='warn'?'warn':'crit');
+
+    renderCropCards(data);
+    setAnimation(animState, selectedCrop, data);
+  }
+
+  /* Animation controller */
+  let rainAnim = null;
+  function setAnimation(state, cropKey, data){
+    animText.textContent = 'Animation: ' + state + ' • ' + cropMeta[cropKey].name;
+    // change stem color per crop
+    const cropColors = {
+      paddy:'#2f8a2f', wheat:'#bfa55c', groundnut:'#b5651d', maize:'#8cbf26', cotton:'#a78bd1', millets:'#c97a2a'
+    };
+    stem.setAttribute('stroke', cropColors[cropKey] || '#2f8a2f');
+
+    // leaves shape/size per crop (small visual tweak)
+    const leafMap = {
+      paddy:[12,14], wheat:[8,10], groundnut:[10,9], maize:[13,15], cotton:[9,11], millets:[11,9]
+    };
+    const l = leafMap[cropKey] || [12,14];
+    leafL.setAttribute('rx', l[0]); leafR.setAttribute('rx', l[1]);
+
+    if(state==='normal'){
+      stem.setAttribute('stroke-width',6); sun.style.display='block'; stopRainVisual();
+      leafL.setAttribute('transform','rotate(-20 -10 -60)'); leafR.setAttribute('transform','rotate(16 12 -40)');
+    } else if(state==='dry'){
+      leafL.setAttribute('rx', Math.max(6, l[0]-6)); leafR.setAttribute('rx', Math.max(6, l[1]-6));
+      stem.setAttribute('stroke-width',5); sun.style.display='block'; stopRainVisual();
+      leafL.setAttribute('transform','rotate(-40 -10 -60)'); leafR.setAttribute('transform','rotate(40 12 -40)');
+    } else if(state==='raining'){
+      leafL.setAttribute('rx', Math.min(18, l[0]+4)); leafR.setAttribute('rx', Math.min(18, l[1]+4));
+      stem.setAttribute('stroke-width',7); sun.style.display='none'; startRainVisual();
+    } else if(state==='wet'){
+      leafL.setAttribute('rx', Math.min(20, l[0]+6)); leafR.setAttribute('rx', Math.min(20, l[1]+6));
+      stem.setAttribute('stroke-width',7); sun.style.display='none'; startRainVisual(true);
+    } else if(state==='hot'){
+      leafL.setAttribute('rx', Math.max(6, l[0]-4)); leafR.setAttribute('rx', Math.max(6, l[1]-4));
+      stem.setAttribute('stroke-width',5); sun.style.display='block'; stopRainVisual();
+    }
+  }
+
+  function startRainVisual(heavy=false){
+    stopRainVisual();
+    const wrap = document.getElementById('cropAnimation');
+    const dropCount = heavy?18:10;
+    rainAnim = document.createElement('div');
+    rainAnim.style.position='absolute';
+    rainAnim.style.left='0'; rainAnim.style.top='0'; rainAnim.style.width='100%'; rainAnim.style.height='100%';
+    rainAnim.style.pointerEvents='none';
+    rainAnim.id='rainVisual';
+    for(let i=0;i<dropCount;i++){
+      const d=document.createElement('div');
+      d.style.position='absolute';
+      d.style.width='2px'; d.style.height='12px'; d.style.background='rgba(90,160,255,0.9)';
+      d.style.left = (Math.random()*80+10)+'%';
+      d.style.top = (Math.random()*20+5)+'%';
+      d.style.opacity = 0.9;
+      d.style.transform = 'translateY(0)';
+      d.style.animation = `drop ${Math.random()*0.8+0.6}s linear ${Math.random()*0.6}s infinite`;
+      rainAnim.appendChild(d);
+    }
+    wrap.appendChild(rainAnim);
+    if(!document.getElementById('dropKeyframes')){
+      const style = document.createElement('style');
+      style.id='dropKeyframes';
+      style.innerHTML = `
+      @keyframes drop{
+        0%{transform: translateY(-10px); opacity:0.9}
+        70%{opacity:0.9}
+        100%{transform: translateY(120px); opacity:0}
+      }`;
+      document.head.appendChild(style);
+    }
+  }
+  function stopRainVisual(){ const ex = document.getElementById('rainVisual'); if(ex && ex.parentNode) ex.parentNode.removeChild(ex); }
+
+  return {
+    render: setValues,
+    advise: advisory,
+    pushLog: pushLog,
+    clearLogs: function(){ logs=[]; renderHistory(); }
+  };
+})();
+
+/* WIRING SIMULATOR -> UI */
+function onTick(data){ UI.render(data); UI.advise(data); }
+simulator.start(onTick,1);
+
+/* CONTROL BINDINGS */
+document.getElementById('btnPlay').addEventListener('click', ()=>{
+  if(!simulator.isRunning) simulator.start(onTick, parseFloat(document.getElementById('speed').value));
+  document.getElementById('btnPlay').disabled = true;
+  document.getElementById('btnPause').disabled = false;
+});
+document.getElementById('btnPause').addEventListener('click', ()=>{
+  simulator.stop();
+  document.getElementById('btnPlay').disabled = false;
+  document.getElementById('btnPause').disabled = true;
+});
+document.getElementById('speed').addEventListener('change', (e)=>{
+  const val = parseFloat(e.target.value);
+  if(simulator.isRunning){ simulator.stop(); simulator.start(onTick, val); }
+});
+
+document.getElementById('forceRain').addEventListener('click', ()=>{
+  const cur = simulator.getState();
+  simulator.setState({rain: !cur.rain});
+});
+document.getElementById('forceIrr').addEventListener('click', ()=>{
+  const cur = simulator.getState();
+  simulator.setState({irrigationActive: !cur.irrigationActive});
+});
+
+document.getElementById('presetNormal').addEventListener('click', ()=>{
+  simulator.setState({temperature:28, humidity:70, soilMoisture:55, rain:false, tankLevel:80, irrigationActive:false});
+});
+document.getElementById('presetDrought').addEventListener('click', ()=>{
+  simulator.setState({temperature:34, humidity:32, soilMoisture:18, rain:false, tankLevel:60, irrigationActive:false});
+});
+document.getElementById('presetRain').addEventListener('click', ()=>{
+  simulator.setState({temperature:22, humidity:88, soilMoisture:78, rain:true, tankLevel:90, irrigationActive:false});
+});
+document.getElementById('presetHeat').addEventListener('click', ()=>{
+  simulator.setState({temperature:39, humidity:28, soilMoisture:22, rain:false, tankLevel:70, irrigationActive:false});
+});
+
+document.getElementById('clearLog').addEventListener('click', ()=>{ UI.clearLogs(); });
+
+// Predict best crop (simple rule-based)
+document.getElementById('predictCrop').addEventListener('click', ()=>{
+  const s = simulator.getState();
+  // scoring for crops
+  const scores = {};
+  const crops = ['paddy','wheat','groundnut','maize','cotton','millets'];
+  for(const c of crops){
+    const meta = (function(){ 
+      const m = {
+        paddy:{t:[20,35],h:[60,95],soil:50},
+        wheat:{t:[10,30],h:[40,70],soil:30},
+        groundnut:{t:[25,38],h:[40,70],soil:25},
+        maize:{t:[20,35],h:[50,80],soil:35},
+        cotton:{t:[21,35],h:[40,65],soil:30},
+        millets:{t:[25,40],h:[20,60],soil:15}
+      }; return m[c];
+    })();
+    let score = 0;
+    if(s.temperature >= meta.t[0] && s.temperature <= meta.t[1]) score+=2;
+    if(s.humidity >= meta.h[0] && s.humidity <= meta.h[1]) score+=1;
+    if(s.soilMoisture >= meta.soil) score+=2;
+    if(s.tankLevel > 30) score+=1;
+    if(s.rain) score+=1;
+    scores[c]=score;
+  }
+  // find max
+  let best = Object.keys(scores).reduce((a,b)=> scores[a]>=scores[b]?a:b);
+  alert(`Based on current simulated conditions,\nBest suited crop: ${best.charAt(0).toUpperCase()+best.slice(1)}\n(You can change crop using the dropdown)`);
+});
+
+// change visuals when crop selection changes
+document.getElementById('cropSelect').addEventListener('change', ()=>{
+  const cur = simulator.getState();
+  UI.advise(cur);
+});
+
+// keyboard shortcuts
+document.addEventListener('keydown', (e)=>{
+  if(e.key==='r') document.getElementById('forceRain').click();
+  if(e.key==='i') document.getElementById('forceIrr').click();
+  if(e.key===' ') { e.preventDefault(); document.getElementById('btnPause').disabled ? document.getElementById('btnPlay').click() : document.getElementById('btnPause').click(); }
+});
+
+// initial render of crop cards
+UI.advise(simulator.getState());
+</script>
+</body>
+</html>
